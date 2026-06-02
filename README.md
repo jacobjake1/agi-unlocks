@@ -19,7 +19,7 @@ Most models of AI adoption use historical technology adoption curves. Those curv
 | Outcome | Probability | Notes |
 |---|---|---|
 | Danger Zone Transition | 55% | Gets there eventually but brutal 2028–2033. Most likely single path. |
-| Soft Landing | 10% | Trimmed hard — AGI→ASI speed makes managed transition nearly impossible. |
+| Soft Landing | 10% | Trimmed hard — AGI→ASI speed makes managed transition nearly impossible. Only if there's some serious bottlenecks. |
 | Power Concentration Lock-in | 8% | Multi-company competition + mass abundance makes sustained monopoly unlikely. |
 | Misalignment / Skynet-Adjacent | 12% | Requires self-awareness AND threat perception. Training on human survival data is the backdoor. |
 | Extinction | 5% | ASI smart enough to want us gone is probably smart enough to find coexistence more efficient. |
