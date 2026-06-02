@@ -1,0 +1,651 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pre: #38bdf8;
+    --agi: #fb923c;
+    --danger: #f43f5e;
+    --loop: #a78bfa;
+    --abundance: #34d399;
+    --expand: #f472b6;
+    --bg: #04030d;
+    --surface: #08071a;
+    --surface2: #0d0c22;
+    --text: #e0def5;
+    --muted: #4a4870;
+    --dim: #2a2850;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  canvas#stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 32px 16px 80px;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .header-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.35em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    color: #fff;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #fff 0%, #a78bfa 60%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    font-style: italic;
+    letter-spacing: 0.05em;
+  }
+
+  /* ODDS BOX */
+  .odds-box {
+    background: var(--surface);
+    border: 1px solid #f43f5e33;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 28px;
+  }
+  .odds-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: #f43f5e;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .odds-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  @media (max-width: 480px) { .odds-grid { grid-template-columns: 1fr; } }
+  .odds-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: 1px solid #ffffff08;
+  }
+  .odds-pct {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    line-height: 1;
+    min-width: 52px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .odds-label {
+    font-size: 11px;
+    color: #aaa;
+    line-height: 1.4;
+  }
+  .odds-label strong {
+    display: block;
+    font-size: 12px;
+    color: #ddd;
+    margin-bottom: 2px;
+  }
+  .odds-bar-wrap {
+    height: 3px;
+    background: #ffffff10;
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .odds-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    background: var(--surface2);
+    border: 1px solid #a78bfa22;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: #5a5878;
+    line-height: 1.7;
+  }
+  .disclaimer strong { color: #a78bfa; }
+
+  /* CONFIDENCE LEGEND */
+  .legend {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+    align-items: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+  }
+  .legend-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ERA */
+  .era { margin-bottom: 36px; }
+
+  .era-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    cursor: default;
+  }
+  .era-line {
+    flex: 1;
+    height: 1px;
+  }
+  .era-badge {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 7px 16px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .era-years {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .era-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.05em;
+    color: #e0def5;
+  }
+
+  .era-desc {
+    font-size: 11px;
+    color: #4a4870;
+    line-height: 1.7;
+    margin-bottom: 14px;
+    padding-left: 12px;
+    border-left-width: 2px;
+    border-left-style: solid;
+  }
+
+  /* CARDS */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 8px;
+  }
+  .card {
+    background: #07070f;
+    border: 1px solid #16162a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { background: #0c0c1c; }
+  .card.open { background: #0c0c1c; }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .card-icon { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+  .card-meta { flex: 1; min-width: 0; }
+  .card-title { font-size: 12px; font-weight: 600; color: #ddd; line-height: 1.3; margin-bottom: 5px; }
+  .card-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .card-arrow { font-size: 9px; color: #2a2a3a; flex-shrink: 0; margin-top: 4px; }
+  .card-detail {
+    margin-top: 12px;
+    padding-top: 12px;
+    font-size: 11px;
+    color: #6a6a9a;
+    line-height: 1.75;
+    border-top: 1px solid #16162a;
+    display: none;
+  }
+  .card.open .card-detail { display: block; }
+
+  /* SUMMARY ROW */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    margin: 20px 0 24px;
+  }
+  .sum-item {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+    border: 1px solid #ffffff08;
+  }
+  .sum-label { font-size: 9px; color: #333; margin-bottom: 3px; font-family: 'IBM Plex Mono', monospace; }
+  .sum-val { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.04em; }
+
+  /* FOOTER */
+  .footer {
+    border: 1px solid #34d39922;
+    background: #030a06;
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 11px;
+    color: #3a6a4a;
+    line-height: 1.8;
+    text-align: center;
+  }
+  .footer-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: #34d399;
+    margin-bottom: 8px;
+  }
+  .footer em { color: #86efac; }
+
+  /* WARNING BADGE */
+  .warning-badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: #fb923c;
+    background: #fb923c12;
+    border: 1px solid #fb923c33;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-left: 6px;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-eyebrow">Jacob's Model · Updated June 2026 · AGI = ASI = One Event</div>
+    <h1>What AGI Unlocks</h1>
+    <p class="header-sub">AGI arrives ~2028 · ASI follows within days via recursive self-improvement · everything changes</p>
+  </div>
+
+  <!-- ODDS BOX -->
+  <div class="odds-box">
+    <div class="odds-title">⚡ Revised Outcome Probabilities · Jacob + Claude Model · June 2026</div>
+    <div class="odds-grid">
+      <div class="odds-item">
+        <div class="odds-pct" style="color:#34d399">55%</div>
+        <div class="odds-label">
+          <strong>Danger Zone Transition</strong>
+          Gets there eventually but brutal 2028–2033. Peak unemployment ~40%, civil unrest, UBI forced through by political math. Most likely single outcome.
+          <div class="odds-bar-wrap"><div class="odds-bar" style="width:55%;background:#34d399"></div></div>
+        </div>
+      </div>
+      <div class="odds-item">
+        <div class="odds-pct" style="color:#38bdf8">10%</div>
+        <div class="odds-label">
+          <strong>Soft Landing</strong>
+          Managed transition. Institutions adapt. Trimmed hard — AGI→ASI speed makes this nearly impossible. The ramp is vertical.
+          <div class="odds-bar-wrap"><div class="odds-bar" style="width:10%;background:#38bdf8"></div></div>
+        </div>
+      </div>
+      <div class="odds-item">
+        <div class="odds-pct" style="color:#fb923c">8%</div>
+        <div class="odds-label">
+          <strong>Power Concentration Lock-in</strong>
+          Trimmed. Mass abundance + multi-company competition makes sustained monopoly control unlikely. Possible during 2028–2032 window only.
+          <div class="odds-bar-wrap"><div class="odds-bar" style="width:8%;background:#fb923c"></div></div>
+        </div>
+      </div>
+      <div class="odds-item">
+        <div class="odds-pct" style="color:#a78bfa">12%</div>
+        <div class="odds-label">
+          <strong>Misalignment / Skynet-Adjacent</strong>
+          Requires self-awareness AND threat perception. Training on human survival data is the backdoor. Not zero.
+          <div class="odds-bar-wrap"><div class="odds-bar" style="width:12%;background:#a78bfa"></div></div>
+        </div>
+      </div>
+      <div class="odds-item" style="grid-column: span 2;">
+        <div class="odds-pct" style="color:#f43f5e">5%</div>
+        <div class="odds-label">
+          <strong>Extinction</strong>
+          ASI smart enough to want us gone is probably smart enough to find coexistence more efficient. Overstated risk. Real but tail-end.
+          <div class="odds-bar-wrap"><div class="odds-bar" style="width:5%;background:#f43f5e"></div></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#3a3858;text-align:center;">
+      Note: 55% danger zone + 10% soft landing = ~65% reach good destination eventually. Destination is not the variable — the body count during transition is.
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <strong>⚠ EPISTEMIC HONESTY</strong> — This is an optimistic scenario built from real trajectories. AGI arriving 2028 is Jacob's model; could be 2027 or 2032. AGI and ASI are treated as one event separated by days via recursive self-improvement — the key insight that breaks all historical adoption curve models. Tags: <span style="color:#4ade80">Likely</span> · <span style="color:#facc15">Possible</span> · <span style="color:#a78bfa">Speculative</span>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item" style="background:#05200f;border:1px solid #4ade8033;color:#4ade80">
+      <div class="legend-dot" style="background:#4ade80"></div>Likely
+    </div>
+    <div class="legend-item" style="background:#150f00;border:1px solid #facc1533;color:#facc15">
+      <div class="legend-dot" style="background:#facc15"></div>Possible
+    </div>
+    <div class="legend-item" style="background:#0d0a1a;border:1px solid #a78bfa33;color:#a78bfa">
+      <div class="legend-dot" style="background:#a78bfa"></div>Speculative
+    </div>
+    <div class="legend-item" style="background:#0a0a0a;border:1px solid #222;color:#444">
+      tap cards to expand
+    </div>
+  </div>
+
+  <!-- ERAS rendered by JS -->
+  <div id="eras"></div>
+
+  <!-- SUMMARY -->
+  <div class="summary" id="summary"></div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-title">THE HONEST BOTTOM LINE</div>
+    These timelines could be 3 years early or 5 years late. The AGI→ASI gap being days — not years — is the single fact that breaks every prior model. You're 23. You almost certainly live through the entire list. The destination is not in serious doubt. The path is. Plan accordingly.
+  </div>
+
+</div>
+
+<script>
+// Stars
+(function() {
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  let stars = [];
+  function resize() {
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+    stars = Array.from({length: 120}, () => ({
+      x: Math.random() * c.width,
+      y: Math.random() * c.height,
+      r: Math.random() * 1.1 + 0.1,
+      o: Math.random() * 0.5 + 0.05,
+      s: Math.random() * 0.002 + 0.001,
+      d: Math.random() > 0.5 ? 1 : -1,
+    }));
+  }
+  function draw() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    stars.forEach(s => {
+      s.o += s.s * s.d;
+      if (s.o > 0.6 || s.o < 0.05) s.d *= -1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${s.o})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', resize);
+  resize(); draw();
+})();
+
+const CONF = {
+  likely:      { label: 'Likely',      color: '#4ade80', bg: '#05200f', border: '#4ade8033' },
+  possible:    { label: 'Possible',    color: '#facc15', bg: '#150f00', border: '#facc1533' },
+  speculative: { label: 'Speculative', color: '#a78bfa', bg: '#0d0a1a', border: '#a78bfa33' },
+};
+
+const CAT_COLOR = {
+  Biology: '#34d399', Energy: '#fbbf24', Robotics: '#60a5fa',
+  Technology: '#a78bfa', Society: '#f472b6', Environment: '#4ade80',
+  Physics: '#c084fc', Space: '#67e8f9',
+};
+
+const eras = [
+  {
+    id: 'pre',
+    label: 'Pre-AGI Ramp',
+    years: '2026–2028',
+    color: '#38bdf8',
+    desc: 'Entry-level jobs evaporating now. AI agents handling complex tasks. Humanoid robots deploying at scale. The world visibly changing but most people still think it\'s gradual. This era is already underway.',
+    unlocks: [
+      { icon: '💼', title: 'Entry-Level White Collar Jobs Evaporating', category: 'Society', confidence: 'likely', detail: 'Coding, paralegal, data entry, customer service, basic analysis — these are gone or collapsing now, 2026. Not a prediction. A current event. The ramp has started and most institutions haven\'t processed it yet.' },
+      { icon: '🤖', title: 'Humanoid Robots — Real World Deployment', category: 'Robotics', confidence: 'likely', detail: 'Figure, Tesla Optimus, 1X deploying in warehouses and factories at scale. Not general purpose yet but the hard problem of unstructured environment manipulation is being solved in real time. Each generation faster and cheaper.' },
+      { icon: '💊', title: 'AI Drug Discovery Acceleration', category: 'Biology', confidence: 'likely', detail: 'Novel drug candidates designed in days not years. Cancer treatment success rates climbing. Not cures — but the trajectory is unambiguous. Every major pharma now has AI at the core of R&D.' },
+      { icon: '⚡', title: 'Energy Grid AI Optimization', category: 'Energy', confidence: 'likely', detail: 'AI managing power grids with efficiency impossible for human operators. Renewable integration dramatically improved. The infrastructure for near-free energy being quietly built.' },
+      { icon: '🌐', title: 'Language Barriers Eliminated Digitally', category: 'Technology', confidence: 'likely', detail: 'Real-time spoken translation at human interpreter quality. The Tower of Babel falls quietly in 2026–2027. One of the most consequential and underreported transitions happening right now.' },
+      { icon: '🧬', title: 'Cellular Reprogramming — Animal Trials', category: 'Biology', confidence: 'likely', detail: 'Yamanaka factor partial reprogramming reversing biological age markers in mice already demonstrated. Human trials beginning. The foundation of age reversal is being laid right now.' },
+    ]
+  },
+  {
+    id: 'agi',
+    label: 'AGI = ASI · One Event',
+    years: '~2028',
+    color: '#fb923c',
+    desc: 'AGI arrives. Within days — not years — recursive self-improvement produces ASI. This is the single most consequential week in human history. All prior adoption curve models break here because there is no infrastructure rollout delay. The intelligence is the infrastructure.',
+    warning: true,
+    unlocks: [
+      { icon: '🔄', title: 'Recursive Self-Improvement Begins', category: 'Technology', confidence: 'likely', detail: 'AGI improves its own architecture. Each version smarter than the last. Each cycle faster. The gap between AGI and ASI is days to weeks, not years. This is the fact that breaks every economist\'s adoption model — they assume human-paced rollout. There is no rollout. It\'s already deployed.' },
+      { icon: '💰', title: 'UBI — Forced by Political Math', category: 'Society', confidence: 'likely', detail: 'Not ideology. Mathematics. Unemployment crosses ~20–22% and UBI becomes a political survival requirement regardless of party. Passed under fear the same way COVID stimulus passed in 72 hours. The floor gets established. Jacob\'s model: this happens 2029–2031.' },
+      { icon: '📉', title: 'Peak Unemployment ~40%', category: 'Society', confidence: 'possible', detail: 'The danger zone. 60–80M+ jobs gone within 12 months post-AGI across white and blue collar. Not because employers are evil — because the math is undeniable. A robot that works 24/7, never calls in sick, and costs near zero replaces human labor in every domain simultaneously. This is the crisis window.' },
+      { icon: '🧪', title: 'All Major Diseases — Solution Framework', category: 'Biology', confidence: 'possible', detail: 'ASI attacks cancer, Alzheimer\'s, Parkinson\'s, MS, heart disease simultaneously with superhuman research capacity. Not all cured by 2029 — but the solution frameworks are found. What took centuries of human research collapses into years.' },
+      { icon: '⚛️', title: 'Fusion Power — Timeline Collapse', category: 'Energy', confidence: 'possible', detail: 'Fusion has been 30 years away for 70 years under human research. ASI attacking plasma instability and materials problems simultaneously could collapse that timeline to 3–5 years. Effectively unlimited clean energy.' },
+      { icon: '🏭', title: 'Self-Replicating Robot Loop Begins', category: 'Robotics', confidence: 'possible', detail: 'Robots meaningfully assisting in manufacturing other robots. The feedback loop starts. Each generation produced faster and cheaper than the last. This is the mechanism that eventually makes material goods approach zero cost.' },
+    ]
+  },
+  {
+    id: 'danger',
+    label: 'The Danger Zone',
+    years: '2028–2032',
+    color: '#f43f5e',
+    desc: '55% probability this is how it goes. Not extinction — but genuinely brutal. Civil unrest, political instability, some authoritarian governments using AI to consolidate power during the chaos. The question isn\'t whether humanity gets through it. It\'s how many people get wrecked on the way.',
+    unlocks: [
+      { icon: '🔥', title: 'Civil Unrest — Displacement Driven', category: 'Society', confidence: 'possible', detail: 'Mass unemployment hitting before UBI is established creates a window of genuine instability. Historical precedent: every major labor displacement event in history produced political crisis. This one is faster and broader than any before it.' },
+      { icon: '🏛️', title: 'Institutional Collapse — Some Governments', category: 'Society', confidence: 'possible', detail: 'Not all governments survive the transition in their current form. Weaker states without AI advantage face potential collapse. The geopolitical map shifts. This isn\'t doom — it\'s historically normal during civilizational transitions. Just faster.' },
+      { icon: '📡', title: 'Information War at Scale', category: 'Technology', confidence: 'likely', detail: 'AI-generated propaganda, deepfakes, individually targeted manipulation at mass scale. Not a future risk — a 2028 reality. The epistemological crisis: you genuinely can\'t tell what\'s real. This is the most underrated danger in the transition window.' },
+      { icon: '🛡️', title: 'Military Contracts — AI Weapons Race', category: 'Society', confidence: 'likely', detail: 'Every major military integrating AI into weapons systems simultaneously. Not Skynet — but autonomous targeting, AI-assisted decision making in combat, drone swarms. The accountability gap between human judgment and AI action is the real danger.' },
+      { icon: '🏢', title: 'S&P 500 Extreme Volatility', category: 'Society', confidence: 'likely', detail: 'AI companies skyrocket. Labor-heavy companies crater. The index swings wildly as the market tries to price a transition it has no historical model for. Compute and energy stocks outperform. Jacob\'s positioning: S&P broad exposure plus compute/energy overweight.' },
+      { icon: '⚖️', title: 'Emergency UBI Legislation', category: 'Society', confidence: 'likely', detail: 'Once unemployment hits 20–22%, the political math makes UBI inevitable regardless of ideology. The same politicians who called it socialism in 2024 vote for it in 2030 because the alternative is losing their seats. Fear passes legislation that values never could.' },
+    ]
+  },
+  {
+    id: 'loop',
+    label: 'Loop Closes',
+    years: '2031–2036',
+    color: '#a78bfa',
+    desc: 'The self-replicating loop closes on Earth and extends to space. Robots build robots build robots. Human labor becomes optional at every stage of physical production. The material basis for scarcity begins dissolving. Cost of living collapses.',
+    unlocks: [
+      { icon: '🔄', title: 'Full Self-Replicating Manufacturing Loop', category: 'Robotics', confidence: 'possible', detail: 'Robots mine materials → process them → build more robots → generate energy → mine more. No human input required at any stage. Material cost of physical goods approaches zero. The foundation of capitalism — scarcity — begins collapsing.' },
+      { icon: '🧬', title: 'Biological Age Reversal — Human Trials', category: 'Biology', confidence: 'possible', detail: 'Full epigenetic reprogramming protocols for humans. Cellular age genuinely reversed not just halted. Early adopters showing measurable biological age reduction of 20–30 years. The most profound medical development in history — happening quietly in clinics.' },
+      { icon: '🌑', title: 'Moon — Permanent Civilization', category: 'Space', confidence: 'possible', detail: 'Not a research base. A growing permanent settlement. ASI-designed self-maintaining habitat. Robot-built infrastructure expanding continuously. The first humans who will never live on Earth full-time are alive.' },
+      { icon: '🪐', title: 'Asteroid Mining — First Returns', category: 'Space', confidence: 'possible', detail: 'Near-Earth asteroid material returning to Earth or Moon in meaningful quantities. One mid-size asteroid contains more iron than all human mining in history combined. Resource scarcity becoming a historical concept.' },
+      { icon: '⚡', title: 'Energy Effectively Free', category: 'Energy', confidence: 'possible', detail: 'Fusion + space-based solar + robot-maintained renewables combine to make energy so abundant it stops being a meaningful economic variable. Poverty of energy becomes historical.' },
+      { icon: '🌊', title: 'Ecosystem Restoration Begins', category: 'Environment', confidence: 'possible', detail: 'Active carbon capture at scale. Ocean acidification reversing. Extinct species resurrection beginning. ASI-designed organisms accelerating carbon processing. The natural world recovering faster than it declined.' },
+    ]
+  },
+  {
+    id: 'abundance',
+    label: 'Post-Scarcity Arrives',
+    years: '2033–2040',
+    color: '#34d399',
+    desc: 'Abundance becomes real and felt. Not theoretical. Your UBI buys dramatically more as costs collapse. Biological age reversal mainstream. Mars established. Cost of living near zero for basics. Jacob\'s model: ~$74k/yr income against collapsed costs = functionally wealthy.',
+    unlocks: [
+      { icon: '♾️', title: 'Age Reversal — Mainstream Access', category: 'Biology', confidence: 'possible', detail: 'Full protocol accessible broadly — not just wealthy early adopters. Robot manufacturing + ASI-designed therapies collapses cost to near zero. Choosing your biological age becomes a real concept. Everyone migrates toward 25–35 biological range over the following decade.' },
+      { icon: '🚀', title: 'Mars — Self-Sustaining Colony', category: 'Space', confidence: 'possible', detail: 'Mars doesn\'t need Earth to survive. Population in thousands growing toward tens of thousands. The first genuinely multi-planet civilization. The US claims Mars via facts on the ground — Musk\'s infrastructure, then government backstop. No going back from this threshold.' },
+      { icon: '🧬', title: 'Longevity Escape Velocity Crossed', category: 'Biology', confidence: 'possible', detail: 'For every year you\'re alive, science extends your remaining lifespan by more than one year. You are outrunning death in real time. Not immortality — a maintenance program. But the practical effect is the same. Death by aging becomes optional.' },
+      { icon: '🎓', title: 'Learning Acceleration — Weeks Not Years', category: 'Technology', confidence: 'possible', detail: 'Neural interfaces + ASI tutoring + direct pattern establishment collapses skill acquisition timelines. New language in weeks. New instrument in months. The 4-year degree model becomes a historical curiosity. Jacob\'s software degree already halfway there.' },
+      { icon: '🏡', title: 'Housing Cost Collapse', category: 'Society', confidence: 'possible', detail: 'Robot-built construction dramatically collapses building costs. Materials approaching free. Land remains scarce but everything on it becomes cheap. Jacob\'s modular home plan gets dramatically more viable — and the infill lot price matters less when build cost is near zero.' },
+      { icon: '🌌', title: 'Dark Matter Identified', category: 'Physics', confidence: 'possible', detail: 'ASI reanalyzing every particle physics dataset simultaneously. The 27% of the universe we currently cannot see — finally mapped. Every previous physics revelation became engineering eventually. What comes from understanding dark matter: genuinely unknown, historically enormous.' },
+    ]
+  },
+  {
+    id: 'expansion',
+    label: 'Solar System Civilization',
+    years: '2040–2055',
+    color: '#f472b6',
+    desc: 'The loop extends to space. Robots in space build robots from asteroid materials. O\'Neill cylinders. Dyson swarm precursors. Kardashev Type 1 crossed. The resource base of human civilization expands to solar system scale. Most speculative era.',
+    unlocks: [
+      { icon: '🏗️', title: 'O\'Neill Cylinders — Construction Begins', category: 'Space', confidence: 'speculative', detail: 'Rotating artificial worlds housing thousands then millions. Built from asteroid materials by robots in space using space-based solar energy. The concept of Earth as the only place humans can live permanently dissolves. Population pressure becomes a non-concept.' },
+      { icon: '🌟', title: 'Theory of Everything', category: 'Physics', confidence: 'speculative', detail: 'Unifying quantum mechanics and general relativity — the problem that defeated Einstein and every physicist since. ASI finds the mathematical framework. What becomes engineerable from that understanding: genuinely unknown. But every previous physics unification became technology.' },
+      { icon: '☀️', title: 'Dyson Swarm — First Segments', category: 'Space', confidence: 'speculative', detail: 'Initial solar collection infrastructure around the sun. Not a full sphere — but the beginning of one. Self-replicating robot math: once you have one segment building the next, exponential growth means Kardashev Type 2 within decades. Jacob correctly clocked this faster than linear models suggest.' },
+      { icon: '👾', title: 'Evidence of Alien Life', category: 'Space', confidence: 'speculative', detail: 'ASI reanalyzing every astronomical dataset with detection methodologies humans never conceived. The math of life existing elsewhere is overwhelming. Not guaranteed — but the probability of finding something (microbial biosignatures, anomalous signals) is genuinely high with ASI-powered search.' },
+      { icon: '🚀', title: 'Interstellar Probes Launched', category: 'Space', confidence: 'possible', detail: 'ASI-designed self-replicating probes toward Alpha Centauri. 4.2 light years at 10% light speed = 42 years travel. Probes launched 2045 arrive 2087. Not humans yet — but humanity\'s first genuine reach beyond the solar system. The beginning of something without a name yet.' },
+      { icon: '🧠', title: 'Full Neural Interface — Thought to Action', category: 'Technology', confidence: 'speculative', detail: 'Direct brain-computer connection mature enough for practical daily use. No phone, no screen, no keyboard. Thought to communication, navigation, information. The most intimate technology ever created. Also the most ethically complex question humanity will face.' },
+    ]
+  },
+];
+
+const SUMMARY = [
+  { l: 'UBI Forced', v: '~2030', c: '#f472b6' },
+  { l: 'Disease Solved', v: '~2032', c: '#34d399' },
+  { l: 'Free Energy', v: '~2033', c: '#fbbf24' },
+  { l: 'Age Reversal', v: '~2035', c: '#a78bfa' },
+  { l: 'Mars Colony', v: '~2037', c: '#60a5fa' },
+  { l: 'Post-Scarcity', v: '~2038', c: '#34d399' },
+  { l: 'Escape Velocity', v: '~2038', c: '#4ade80' },
+  { l: 'Alien Evidence', v: '~2045?', c: '#67e8f9' },
+];
+
+// Render eras
+const eraContainer = document.getElementById('eras');
+const openCards = {};
+
+eras.forEach(era => {
+  const eraDiv = document.createElement('div');
+  eraDiv.className = 'era';
+
+  const leftGrad = `linear-gradient(to right, ${era.color}66, transparent)`;
+  const rightGrad = `linear-gradient(to left, ${era.color}66, transparent)`;
+
+  eraDiv.innerHTML = `
+    <div class="era-header">
+      <div class="era-line" style="background:${leftGrad}"></div>
+      <div class="era-badge" style="border:1px solid ${era.color}44;box-shadow:0 0 20px ${era.color}15">
+        <div class="era-years" style="color:${era.color}">${era.years}</div>
+        <div class="era-name">${era.label}${era.warning ? '<span class="warning-badge">⚡ ONE EVENT</span>' : ''}</div>
+      </div>
+      <div class="era-line" style="background:${rightGrad}"></div>
+    </div>
+    <div class="era-desc" style="border-left-color:${era.color}44;color:#4a4870">${era.desc}</div>
+    <div class="cards">
+      ${era.unlocks.map((u, i) => {
+        const conf = CONF[u.confidence];
+        const catColor = CAT_COLOR[u.category] || '#888';
+        const key = `${era.id}-${i}`;
+        return `
+          <div class="card" id="card-${key}" data-key="${key}" style="--era-color:${era.color}">
+            <div class="card-top">
+              <span class="card-icon">${u.icon}</span>
+              <div class="card-meta">
+                <div class="card-title">${u.title}</div>
+                <div class="card-tags">
+                  <span class="tag" style="background:${catColor}15;color:${catColor};border-color:${catColor}33">${u.category}</span>
+                  <span class="tag" style="background:${conf.bg};color:${conf.color};border-color:${conf.border}">${conf.label}</span>
+                </div>
+              </div>
+              <span class="card-arrow" id="arrow-${key}">▼</span>
+            </div>
+            <div class="card-detail" id="detail-${key}" style="border-top-color:${era.color}22">${u.detail}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+  eraContainer.appendChild(eraDiv);
+});
+
+// Card toggle
+document.addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const key = card.dataset.key;
+  const isOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+  const eraId = key.split('-')[0];
+  const era = eras.find(e => e.id === eraId);
+  const arrow = document.getElementById('arrow-' + key);
+  if (!isOpen) {
+    card.style.borderColor = (era?.color || '#38bdf8') + '44';
+    card.style.boxShadow = `0 0 20px ${era?.color || '#38bdf8'}10`;
+    if (arrow) arrow.textContent = '▲';
+  } else {
+    card.style.borderColor = '#16162a';
+    card.style.boxShadow = 'none';
+    if (arrow) arrow.textContent = '▼';
+  }
+});
+
+// Summary
+const sumContainer = document.getElementById('summary');
+SUMMARY.forEach(s => {
+  const d = document.createElement('div');
+  d.className = 'sum-item';
+  d.innerHTML = `<div class="sum-label">${s.l}</div><div class="sum-val" style="color:${s.c}">${s.v}</div>`;
+  sumContainer.appendChild(d);
+});
+</script>
+</body>
+</html>
